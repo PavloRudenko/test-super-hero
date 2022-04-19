@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { ImageName } from '../dto/create-super-hero.dto';
 
 export type SuperHeroDocument = SuperHero & Document;
 
@@ -26,8 +27,12 @@ export class SuperHero {
   @Prop()
   catchPhrase: string;
 
-  @Prop()
-  images: string[];
+  @Prop({
+    required: true,
+    maxlength: 5,
+    max: 5,
+  })
+  imageNames: ImageName[];
 }
 
 export const CatSchema = SchemaFactory.createForClass(SuperHero);

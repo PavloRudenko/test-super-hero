@@ -1,0 +1,15 @@
+.HerosPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+}
+
+.container {
+  width: 100%;
+}
+
+.noHeros {
+  margin-top: 25vh;
+  font-size: 1.5rem;
+}

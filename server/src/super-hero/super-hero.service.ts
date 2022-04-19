@@ -1,8 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 
-import { CreateSuperHeroDto, ImageDto } from './dto/create-super-hero.dto';
+import {
+  CreateSuperHeroDto,
+  ImageFile,
+  ImageName,
+} from './dto/create-super-hero.dto';
 import { UpdateSuperHeroDto } from './dto/update-super-hero.dto';
 import { ImageUploadService } from './image-upload/image-upload.service';
 import { SuperHero, SuperHeroDocument } from './schemas/super-hero.schema';
@@ -17,21 +21,20 @@ export class SuperHeroService {
 
   create(
     createSuperHeroDto: CreateSuperHeroDto,
-    imageDto: ImageDto,
+    imageDto: ImageFile[],
   ): Promise<SuperHeroDocument> {
-    const images = this.imageUploadService.createImages(imageDto);
-    const newSuperHero = new this.superHeroModel({
-      ...createSuperHeroDto,
-      images,
-    });
-    return newSuperHero.save();
+    try {
+      createSuperHeroDto.imageNames =
+        this.imageUploadService.createImages(imageDto);
+      const newSuperHero = new this.superHeroModel(createSuperHeroDto);
+      return newSuperHero.save();
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  async findAll(count = '5', offset = '0'): Promise<SuperHeroDocument[]> {
-    const superHeros = await this.superHeroModel
-      .find()
-      .skip(Number(offset))
-      .limit(Number(count));
+  async findAll(offset = '0'): Promise<SuperHeroDocument[]> {
+    const superHeros = await this.superHeroModel.find().skip(Number(offset));
     return superHeros;
   }
 
@@ -43,26 +46,48 @@ export class SuperHeroService {
   async update(
     id: ObjectId,
     updateSuperHeroDto: UpdateSuperHeroDto,
-    imageDto: ImageDto,
+    imageDto: ImageFile[],
   ) {
-    if (imageDto) {
-      updateSuperHeroDto.images =
-        this.imageUploadService.createImages(imageDto);
+    const imageNames: ImageName[] = JSON.parse(
+      updateSuperHeroDto.imageNames ?? '[]',
+    );
+    const newImageNames: ImageName[] = [];
+    const oldImageNames: ImageName[] = [];
+
+    for (const imageName of imageNames) {
+      if (imageName.needDelete) {
+        oldImageNames.push(imageName);
+      } else {
+        newImageNames.push(imageName);
+      }
     }
 
-    const oldSuperHero = await this.superHeroModel.findByIdAndUpdate(id, {
-      ...updateSuperHeroDto,
-    });
+    if (newImageNames.length + imageDto?.length > 5)
+      throw new HttpException("Images can't be more then 5", 400);
 
     if (imageDto) {
-      this.imageUploadService.removeImage(oldSuperHero.images);
+      newImageNames.push(...this.imageUploadService.createImages(imageDto));
     }
 
-    return updateSuperHeroDto;
+    const updatedSuperHero = await this.superHeroModel.findByIdAndUpdate(
+      id,
+      {
+        ...updateSuperHeroDto,
+        imageNames: newImageNames,
+      },
+      {
+        new: true,
+      },
+    );
+
+    this.imageUploadService.removeImage(oldImageNames);
+
+    return updatedSuperHero;
   }
 
-  async remove(id: ObjectId): Promise<ObjectId> {
+  async remove(id: ObjectId, imageNames: ImageName[]): Promise<ObjectId> {
     const { _id } = await this.superHeroModel.findByIdAndDelete(id);
+    this.imageUploadService.removeImage(imageNames);
     return _id;
   }
 }

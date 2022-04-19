@@ -1,0 +1,59 @@
+.InfoPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+}
+
+.imageWrapper {
+  position: relative;
+  transform: translateX(100vmax);
+  transition: transform 0.4s ease-in-out;
+
+  &:hover {
+    .infoList {
+      display: block;
+    }
+  }
+
+  .infoList {
+    position: absolute;
+    right: 105%;
+    display: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+
+    li {
+      border: 2px solid;
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    li:first-child {
+      border-color: var(--bs-blue);
+      margin-bottom: 10px;
+    }
+
+    li:last-child {
+      border-color: var(--bs-red);
+    }
+  }
+}
+
+.imageBox {
+  cursor: pointer;
+  border: 3px solid var(--bs-blue);
+}
+
+.pickImage {
+  border-color: var(--bs-red);
+}
+
+.imageBox:not(:last-child) {
+  margin-right: 10px;
+}
+
+.show {
+  transform: translateX(0);
+}

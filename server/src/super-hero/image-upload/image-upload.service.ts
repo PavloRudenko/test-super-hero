@@ -2,21 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { resolve } from 'path';
 import { writeFile, rm } from 'fs/promises';
 import { v4 } from 'uuid';
-import { ImageDto } from '../dto/create-super-hero.dto';
+import { ImageFile, ImageName } from '../dto/create-super-hero.dto';
 
 @Injectable()
 export class ImageUploadService {
-  filePath: string = resolve(__dirname, '..', '..', 'static');
+  private filePath: string = resolve(__dirname, '..', '..', 'static');
 
-  createImages(images: ImageDto): string[] {
+  createImages(images: ImageFile[]): ImageName[] {
     try {
-      const imageNames = [];
+      const imageNames: ImageName[] = [];
       images.forEach((image) => {
         const fileExtension: string = image.originalname.split('.').pop();
         if (fileExtension.match(/jpe?g|png|svg/)) {
-          const imageName: string = v4() + '.' + fileExtension;
-          writeFile(resolve(this.filePath, imageName), image.buffer);
-          imageNames.push(imageName);
+          const _id: string = v4() + '.' + fileExtension;
+          writeFile(resolve(this.filePath, _id), image.buffer);
+          imageNames.push({ _id, needDelete: false });
         }
       });
 
@@ -26,10 +26,12 @@ export class ImageUploadService {
     }
   }
 
-  removeImage(images: string[]): void {
+  removeImage(images: ImageName[]): void {
     try {
-      images.forEach((image) => {
-        rm(resolve(this.filePath, image));
+      images.forEach(({ _id }) => {
+        if (!_id.startsWith('default-superhero')) {
+          rm(resolve(this.filePath, _id));
+        }
       });
     } catch (err) {
       console.error(err);

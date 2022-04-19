@@ -4,7 +4,13 @@ export class CreateSuperHeroDto {
   originDescription: string;
   superpowers: string;
   catchPhrase: string;
-  images: ImageDto;
+  images: ImageFile[];
+  imageNames: ImageName[];
+}
+
+export interface ImageName {
+  readonly _id: string;
+  needDelete: boolean;
 }
 
 export interface ImageFile {
@@ -15,5 +21,3 @@ export interface ImageFile {
   buffer: Buffer;
   size: number;
 }
-
-export type ImageDto = ImageFile[] | string[];

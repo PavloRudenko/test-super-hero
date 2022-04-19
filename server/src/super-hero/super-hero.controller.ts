@@ -25,14 +25,14 @@ export class SuperHeroController {
   @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 5 }]))
   create(
     @Body() createSuperHeroDto: CreateSuperHeroDto,
-    @UploadedFiles() { images: imageDto }: CreateSuperHeroDto,
+    @UploadedFiles() { images: imageDto }: Pick<CreateSuperHeroDto, 'images'>,
   ) {
     return this.superHeroService.create(createSuperHeroDto, imageDto);
   }
 
   @Get()
-  findAll(@Query('count') count: string, @Query('offset') offset: string) {
-    return this.superHeroService.findAll(count, offset);
+  findAll(@Query('offset') offset: string) {
+    return this.superHeroService.findAll(offset);
   }
 
   @Get(':id')
@@ -45,13 +45,13 @@ export class SuperHeroController {
   update(
     @Param('id') id: ObjectId,
     @Body() updateSuperHeroDto: UpdateSuperHeroDto,
-    @UploadedFiles() { images: imageDto }: UpdateSuperHeroDto,
+    @UploadedFiles() { images: imageDto }: Pick<UpdateSuperHeroDto, 'images'>,
   ) {
     return this.superHeroService.update(id, updateSuperHeroDto, imageDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: ObjectId) {
-    return this.superHeroService.remove(id);
+  remove(@Param('id') id: ObjectId, @Query('imageNames') imageNames: string) {
+    return this.superHeroService.remove(id, JSON.parse(imageNames));
   }
 }
